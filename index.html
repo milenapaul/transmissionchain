@@ -8,20 +8,35 @@
       background: black;
       font-family: Arial;
       min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    /* Container to keep content centered and stacked */
+    /* ===== DRAW & TEXT PAGES CENTERED ===== */
+    #drawPage, #textPage {
+      width: 100%;
+      max-width: 850px;
+      min-height: 100vh;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #textPage { display: none; } /* hidden initially */
+
     .page-content {
       display: flex;
       flex-direction: column;
       align-items: center;
-      max-width: 850px;
       width: 100%;
       padding: 0 10px;
       box-sizing: border-box;
     }
 
-    /* Header + Buttons container: flex row with space between */
+    /* Header + Buttons */
     .header-row {
       width: 100%;
       display: flex;
@@ -46,7 +61,7 @@
       height: auto;
     }
 
-    /* Undo container positioned above canvas, left aligned */
+    /* Undo button */
     #undoBtn {
       display: flex;
       align-items: center;
@@ -58,15 +73,8 @@
       margin-bottom: 8px;
       align-self: flex-start;
     }
-    #undoBtn:hover {
-      text-decoration: underline;
-    }
-
-    #undoIcon {
-      width: 20px;
-      height: 20px;
-      fill: white;
-    }
+    #undoBtn:hover { text-decoration: underline; }
+    #undoIcon { width: 20px; height: 20px; fill: white; }
 
     /* Mode toggle */
     .mode-toggle {
@@ -76,19 +84,14 @@
       gap: 20px;
       margin: 20px 0;
     }
-
     .mode-text {
       font-weight: bold;
       color: white;
       transition: 0.3s;
       opacity: 0.5;
     }
-    .mode-text.active {
-      opacity: 1;
-    }
-
+    .mode-text.active { opacity: 1; }
     #toggle_checkbox { display: none; }
-
     label {
       position: relative;
       width: 80px;
@@ -109,9 +112,7 @@
       border-radius: 50%;
       transition: 0.3s;
     }
-    #toggle_checkbox:checked + label:after {
-      left: 44px;
-    }
+    #toggle_checkbox:checked + label:after { left: 44px; }
 
     /* Buttons */
     .send-button {
@@ -125,22 +126,9 @@
       max-width: 140px;
       width: 100%;
     }
-    .send-button:hover {
-      background-color: #ddd;
-    }
+    .send-button:hover { background-color: #ddd; }
 
     /* ===== TEXT PAGE ===== */
-    #textPage {
-      display: none; /* hidden initially */
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      width: 100%;
-      max-width: 850px;
-      padding-top: 80px; /* question slightly lower */
-      box-sizing: border-box;
-    }
-
     .text-title {
       color: white;
       font-weight: normal;
@@ -149,7 +137,6 @@
       text-align: center;
       margin-bottom: 40px;
     }
-
     .input-container {
       display: flex;
       flex-direction: column;
@@ -168,11 +155,9 @@
       outline: none;
       color: white;
     }
-    .input-container input::placeholder {
-      color: rgba(255,255,255,0.4);
-    }
+    .input-container input::placeholder { color: rgba(255,255,255,0.4); }
     .input-container button {
-      align-self: flex-end; /* button to right under input */
+      align-self: flex-end;
       white-space: nowrap;
       padding: 10px 28px;
       font-size: 16px;
@@ -189,7 +174,7 @@
         <button id="sendDraw" class="send-button">Send to Print</button>
       </div>
 
-      <div id="undoBtn" title="Undo last action" tabindex="0" role="button" aria-label="Undo last action">
+      <div id="undoBtn" title="Undo last action">
         <svg id="undoIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
           <path d="M12 5V2L7 7l5 5V7c3.86 0 7 3.14 7 7 0 1.66-.67 3.16-1.76 4.24l1.42 1.42C20.2 18.13 21 15.66 21 13c0-4.97-4.03-9-9-9z"/>
         </svg>
@@ -236,7 +221,6 @@
     let pixelMode = true;
     let pixelGridSize = 15;
     let canvasSize = 800;
-
     let penStrokes = [];
     let pixelActions = [];
     let currentStroke = [];
@@ -267,32 +251,28 @@
         currentStroke.push({x, y});
         ctx.beginPath();
         ctx.moveTo(x, y);
-      } else {
-        drawPixel(e.clientX - rect.left, e.clientY - rect.top);
-      }
+      } else drawPixel(e.clientX - rect.left, e.clientY - rect.top);
     });
 
-    canvas.addEventListener("mouseup", () => {
+    canvas.addEventListener("mouseup", () => { 
       if (!drawing) return;
       drawing = false;
       if (!pixelMode && currentStroke.length > 0) penStrokes.push(currentStroke);
     });
-    canvas.addEventListener("mouseleave", () => {
+
+    canvas.addEventListener("mouseleave", () => { 
       if (!drawing) return;
       drawing = false;
       if (!pixelMode && currentStroke.length > 0) penStrokes.push(currentStroke);
     });
+
     canvas.addEventListener("mousemove", (e) => {
       if (!drawing) return;
       const rect = canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
       if (pixelMode) drawPixel(x, y);
-      else {
-        ctx.lineTo(x, y);
-        ctx.stroke();
-        currentStroke.push({x, y});
-      }
+      else { ctx.lineTo(x, y); ctx.stroke(); currentStroke.push({x, y}); }
     });
 
     function drawPixel(x, y) {
@@ -328,9 +308,7 @@
       redrawCanvas();
     });
 
-    function sendToPrinter(content) {
-      console.log("Send to printer:", content);
-    }
+    function sendToPrinter(content) { console.log("Send to printer:", content); }
 
     // DRAW → TEXT
     sendDrawBtn.addEventListener("click", () => {
@@ -338,7 +316,6 @@
       penStrokes = [];
       pixelActions = [];
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
       drawPage.style.display = "none";
       textPage.style.display = "flex";
       textInput.value = "";
@@ -359,5 +336,6 @@
       e.returnValue = 'Warning: Reloading will lose the current transmission chain!';
     });
   </script>
+
 </body>
 </html>
