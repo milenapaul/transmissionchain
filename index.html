@@ -2,243 +2,182 @@
 <html>
 <head>
   <title>Illustrative Telephone Chain</title>
-<style>
-  body {
-    margin: 0;
-    background: black;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    padding: 40px 0;
-    font-family: Arial;
-  }
+  <style>
+    body {
+      margin: 0;
+      background: black;
+      font-family: Arial;
+      min-height: 100vh;
+    }
 
-  /* Container to keep content centered and stacked */
-  .page-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    max-width: 850px;
-    width: 100%;
-    padding: 0 10px;
-    box-sizing: border-box;
-  }
+    /* Container to keep content centered and stacked */
+    .page-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      max-width: 850px;
+      width: 100%;
+      padding: 0 10px;
+      box-sizing: border-box;
+    }
 
-  /* Header + Buttons container: flex row with space between */
-  .header-row {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-  }
+    /* Header + Buttons container: flex row with space between */
+    .header-row {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
 
-  h2 {
-    color: white;
-    margin: 0;
-    font-weight: normal;
-    text-align: center;
-    flex-grow: 1;
-  }
+    h2 {
+      color: white;
+      margin: 0;
+      font-weight: normal;
+      text-align: center;
+      flex-grow: 1;
+    }
 
-  canvas {
-    border: 2px solid white;
-    background: white;
-    cursor: crosshair;
-    max-width: 100%;
-    height: auto;
-  }
+    canvas {
+      border: 2px solid white;
+      background: white;
+      cursor: crosshair;
+      max-width: 100%;
+      height: auto;
+    }
 
-  /* Undo container positioned above canvas, left aligned */
-  #undoBtn {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    user-select: none;
-    color: white;
-    font-size: 16px;
-    gap: 6px;
-    margin-bottom: 8px;
-    align-self: flex-start;
-  }
-  #undoBtn:hover {
-    text-decoration: underline;
-  }
+    /* Undo container positioned above canvas, left aligned */
+    #undoBtn {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+      color: white;
+      font-size: 16px;
+      gap: 6px;
+      margin-bottom: 8px;
+      align-self: flex-start;
+    }
+    #undoBtn:hover {
+      text-decoration: underline;
+    }
 
-  /* Undo arrow icon as SVG */
-  #undoIcon {
-    width: 20px;
-    height: 20px;
-    fill: white;
-  }
+    #undoIcon {
+      width: 20px;
+      height: 20px;
+      fill: white;
+    }
 
-  /* ===== Toggle Styling ===== */
-  .mode-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 20px;
-    margin: 20px 0;
-  }
+    /* Mode toggle */
+    .mode-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      margin: 20px 0;
+    }
 
-  .mode-text {
-    font-weight: bold;
-    color: white;
-    transition: 0.3s;
-    opacity: 0.5;
-  }
+    .mode-text {
+      font-weight: bold;
+      color: white;
+      transition: 0.3s;
+      opacity: 0.5;
+    }
+    .mode-text.active {
+      opacity: 1;
+    }
 
-  .mode-text.active {
-    opacity: 1;
-  }
+    #toggle_checkbox { display: none; }
 
-  #toggle_checkbox {
-    display: none;
-  }
+    label {
+      position: relative;
+      width: 80px;
+      height: 40px;
+      background: white;
+      border-radius: 40px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    label:after {
+      content: "";
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      width: 32px;
+      height: 32px;
+      background: black;
+      border-radius: 50%;
+      transition: 0.3s;
+    }
+    #toggle_checkbox:checked + label:after {
+      left: 44px;
+    }
 
-  label {
-    position: relative;
-    width: 80px;
-    height: 40px;
-    background: white;
-    border-radius: 40px;
-    cursor: pointer;
-    transition: 0.3s;
-  }
+    /* Buttons */
+    .send-button {
+      background-color: white;
+      color: black;
+      border: none;
+      padding: 6px 16px;
+      font-size: 14px;
+      cursor: pointer;
+      border-radius: 8px;
+      max-width: 140px;
+      width: 100%;
+    }
+    .send-button:hover {
+      background-color: #ddd;
+    }
 
-  label:after {
-    content: "";
-    position: absolute;
-    top: 4px;
-    left: 4px;
-    width: 32px;
-    height: 32px;
-    background: black;
-    border-radius: 50%;
-    transition: 0.3s;
-  }
+    /* ===== TEXT PAGE ===== */
+    #textPage {
+      display: none; /* hidden initially */
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      width: 100%;
+      max-width: 850px;
+      padding-top: 80px; /* question slightly lower */
+      box-sizing: border-box;
+    }
 
-  #toggle_checkbox:checked + label:after {
-    left: 44px;
-  }
+    .text-title {
+      color: white;
+      font-weight: normal;
+      font-size: 28px;
+      letter-spacing: 1px;
+      text-align: center;
+      margin-bottom: 40px;
+    }
 
-  /* ===== Buttons ===== */
-  .send-button {
-    background-color: white;
-    color: black;
-    border: none;
-    padding: 6px 16px;
-    font-size: 14px;
-    cursor: pointer;
-    border-radius: 8px;
-    max-width: 140px;
-    width: 100%;
-  }
-
-  .send-button:hover {
-    background-color: #ddd;
-  }
-
-  /* ===== TEXT PAGE CUSTOM LAYOUT ===== */
-  .text-layout {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 140px; /* breathing room */
-    min-height: 90vh;
-  }
-
-  .text-title {
-    color: white;
-    font-weight: normal;
-    font-size: 28px;
-    letter-spacing: 1px;
-    text-align: center;
-  }
-
-  /* Large immersive typing area */
-  #textInput {
-    background: black;
-    border: none;
-    outline: none;
-    color: white;
-    font-size: 48px;
-    width: 100%;
-    text-align: center;
-    padding: 20px 10px;
-  }
-
-  /* Subtle placeholder tone */
-  #textInput::placeholder {
-    color: rgba(255,255,255,0.4);
-  }
-
-  .text-submit {
-    font-size: 16px;
-    padding: 10px 28px;
-  }
-
-  /* Input + button row for same line */
-.input-row {
-  display: flex;
-  align-items: center;   /* vertically center */
-  gap: 12px;
-  width: 80vw;
-  max-width: 1000px;
-}
-
-.input-row input {
-  flex-grow: 1;          /* takes all remaining space */
-  min-width: 150px;      /* prevent it from shrinking too much */
-}
-
-
-.input-row button {
-  flex-shrink: 0;        /* keeps button its natural size */
-  white-space: nowrap;    /* keeps text on one line */
-  padding: 10px 20px;    /* adjust as needed */
-}
-
-  /* TEXT PAGE container */
-  #textPage {
-  display: flex;
-  flex-direction: column;
-  align-items: center;          /* center horizontally */
-  justify-content: center;      /* center vertically */
-  gap: 40px;                    /* space between question and input */
-  padding-top: 40px;            /* nudge question slightly down from top */
-  width: 100%;
-  max-width: 850px;
-  box-sizing: border-box;
-}
-
-  .input-container {
-  display: flex;
-  flex-direction: column;    /* stack input and button vertically */
-  align-items: center;       /* center input horizontally */
-  width: 80vw;
-  max-width: 1000px;
-  gap: 12px;                 /* space between input and button */
-}
-
-.input-container input {
-  width: 100%;               /* full width of container */
-  max-width: 600px;          /* optional max width for input */
-  text-align: center;        /* text inside input is centered */
-  font-size: 48px;
-  padding: 20px 10px;
-}
-
-.input-container button {
-  align-self: flex-end;      /* button aligns right under input */
-  white-space: nowrap;       /* text stays on one line */
-  padding: 10px 28px;
-}
-
-</style>
+    .input-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 80vw;
+      max-width: 600px;
+      gap: 12px;
+    }
+    .input-container input {
+      width: 100%;
+      text-align: center;
+      font-size: 48px;
+      padding: 20px 10px;
+      background: black;
+      border: none;
+      outline: none;
+      color: white;
+    }
+    .input-container input::placeholder {
+      color: rgba(255,255,255,0.4);
+    }
+    .input-container button {
+      align-self: flex-end; /* button to right under input */
+      white-space: nowrap;
+      padding: 10px 28px;
+      font-size: 16px;
+    }
+  </style>
 </head>
 <body>
 
@@ -251,7 +190,7 @@
       </div>
 
       <div id="undoBtn" title="Undo last action" tabindex="0" role="button" aria-label="Undo last action">
-        <svg id="undoIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <svg id="undoIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
           <path d="M12 5V2L7 7l5 5V7c3.86 0 7 3.14 7 7 0 1.66-.67 3.16-1.76 4.24l1.42 1.42C20.2 18.13 21 15.66 21 13c0-4.97-4.03-9-9-9z"/>
         </svg>
         Undo
@@ -269,181 +208,156 @@
   </div>
 
   <!-- TEXT PAGE -->
-<div id="textPage">
-  <div class="page-content text-layout">
-    <h2 class="text-title">What is that?</h2>
-
-    <div class="input-container">
-      <input type="text" id="textInput" placeholder="Type here..." autofocus>
-      <button id="sendText" class="send-button text-submit">Send to Print</button>
+  <div id="textPage">
+    <div class="page-content">
+      <h2 class="text-title">What is that?</h2>
+      <div class="input-container">
+        <input type="text" id="textInput" placeholder="Type here..." autofocus>
+        <button id="sendText" class="send-button">Send to Print</button>
+      </div>
     </div>
-
   </div>
-</div>
 
-<script>
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
-const toggleBtn = document.getElementById("toggle_checkbox");
-const leftText = document.querySelector(".mode-text.left");
-const rightText = document.querySelector(".mode-text.right");
-const drawPage = document.getElementById("drawPage");
-const textPage = document.getElementById("textPage");
-const drawTitle = document.getElementById("drawTitle");
-const sendDrawBtn = document.getElementById("sendDraw");
-const sendTextBtn = document.getElementById("sendText");
-const textInput = document.getElementById("textInput");
-const undoBtn = document.getElementById("undoBtn");
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const toggleBtn = document.getElementById("toggle_checkbox");
+    const leftText = document.querySelector(".mode-text.left");
+    const rightText = document.querySelector(".mode-text.right");
+    const drawPage = document.getElementById("drawPage");
+    const textPage = document.getElementById("textPage");
+    const drawTitle = document.getElementById("drawTitle");
+    const sendDrawBtn = document.getElementById("sendDraw");
+    const sendTextBtn = document.getElementById("sendText");
+    const textInput = document.getElementById("textInput");
+    const undoBtn = document.getElementById("undoBtn");
 
-let drawing = false;
-let pixelMode = true;
-let pixelGridSize = 15;
-let canvasSize = 800;
+    let drawing = false;
+    let pixelMode = true;
+    let pixelGridSize = 15;
+    let canvasSize = 800;
 
-// History arrays
-let penStrokes = [];
-let pixelActions = [];
-let currentStroke = [];
+    let penStrokes = [];
+    let pixelActions = [];
+    let currentStroke = [];
 
-// Pen settings
-ctx.lineWidth = 50;
-ctx.lineCap = "round";
-ctx.lineJoin = "round";
+    ctx.lineWidth = 50;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
 
-// Toggle highlighting
-toggleBtn.addEventListener("change", () => {
-  pixelMode = !toggleBtn.checked;
-  if (toggleBtn.checked) {
-    leftText.classList.remove("active");
-    rightText.classList.add("active");
-  } else {
-    leftText.classList.add("active");
-    rightText.classList.remove("active");
-  }
-});
+    toggleBtn.addEventListener("change", () => {
+      pixelMode = !toggleBtn.checked;
+      if (toggleBtn.checked) {
+        leftText.classList.remove("active");
+        rightText.classList.add("active");
+      } else {
+        leftText.classList.add("active");
+        rightText.classList.remove("active");
+      }
+    });
 
-// Mouse events
-canvas.addEventListener("mousedown", (e) => {
-  drawing = true;
-  const rect = canvas.getBoundingClientRect();
-  if (!pixelMode) {
-    currentStroke = [];
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    currentStroke.push({x, y});
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-  } else {
-    drawPixel(e.clientX - rect.left, e.clientY - rect.top);
-  }
-});
+    // Drawing events
+    canvas.addEventListener("mousedown", (e) => {
+      drawing = true;
+      const rect = canvas.getBoundingClientRect();
+      if (!pixelMode) {
+        currentStroke = [];
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        currentStroke.push({x, y});
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+      } else {
+        drawPixel(e.clientX - rect.left, e.clientY - rect.top);
+      }
+    });
 
-canvas.addEventListener("mouseup", () => {
-  if (!drawing) return;
-  drawing = false;
-  if (!pixelMode && currentStroke.length > 0) {
-    penStrokes.push(currentStroke);
-    currentStroke = [];
-  }
-});
+    canvas.addEventListener("mouseup", () => {
+      if (!drawing) return;
+      drawing = false;
+      if (!pixelMode && currentStroke.length > 0) penStrokes.push(currentStroke);
+    });
+    canvas.addEventListener("mouseleave", () => {
+      if (!drawing) return;
+      drawing = false;
+      if (!pixelMode && currentStroke.length > 0) penStrokes.push(currentStroke);
+    });
+    canvas.addEventListener("mousemove", (e) => {
+      if (!drawing) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      if (pixelMode) drawPixel(x, y);
+      else {
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        currentStroke.push({x, y});
+      }
+    });
 
-canvas.addEventListener("mouseleave", () => {
-  if (!drawing) return;
-  drawing = false;
-  if (!pixelMode && currentStroke.length > 0) {
-    penStrokes.push(currentStroke);
-    currentStroke = [];
-  }
-});
-
-canvas.addEventListener("mousemove", (e) => {
-  if (!drawing) return;
-  const rect = canvas.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
-
-  if (pixelMode) {
-    drawPixel(x, y);
-  } else {
-    ctx.lineTo(x, y);
-    ctx.stroke();
-    currentStroke.push({x, y});
-  }
-});
-
-function drawPixel(x, y) {
-  const cellSize = canvasSize / pixelGridSize;
-  const pixelX = Math.floor(x / cellSize);
-  const pixelY = Math.floor(y / cellSize);
-  if (!pixelActions.some(p => p.x === pixelX && p.y === pixelY)) {
-    pixelActions.push({x: pixelX, y: pixelY, cellSize});
-  }
-  ctx.fillRect(pixelX * cellSize, pixelY * cellSize, cellSize, cellSize);
-}
-
-function redrawCanvas() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  for (const p of pixelActions) {
-    ctx.fillRect(p.x * p.cellSize, p.y * p.cellSize, p.cellSize, p.cellSize);
-  }
-  ctx.lineWidth = 50;
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-  ctx.strokeStyle = "black";
-  for (const stroke of penStrokes) {
-    ctx.beginPath();
-    if (stroke.length > 0) {
-      ctx.moveTo(stroke[0].x, stroke[0].y);
-      for (let i = 1; i < stroke.length; i++) ctx.lineTo(stroke[i].x, stroke[i].y);
-      ctx.stroke();
+    function drawPixel(x, y) {
+      const cellSize = canvasSize / pixelGridSize;
+      const pixelX = Math.floor(x / cellSize);
+      const pixelY = Math.floor(y / cellSize);
+      if (!pixelActions.some(p => p.x === pixelX && p.y === pixelY)) {
+        pixelActions.push({x: pixelX, y: pixelY, cellSize});
+      }
+      ctx.fillRect(pixelX * cellSize, pixelY * cellSize, cellSize, cellSize);
     }
-  }
-}
 
-// Undo
-undoBtn.addEventListener("click", () => {
-  if (pixelMode) {
-    if (pixelActions.length > 0) pixelActions.pop();
-  } else {
-    if (penStrokes.length > 0) penStrokes.pop();
-  }
-  redrawCanvas();
-});
+    function redrawCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (const p of pixelActions) ctx.fillRect(p.x * p.cellSize, p.y * p.cellSize, p.cellSize, p.cellSize);
+      ctx.lineWidth = 50;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.strokeStyle = "black";
+      for (const stroke of penStrokes) {
+        ctx.beginPath();
+        if (stroke.length > 0) {
+          ctx.moveTo(stroke[0].x, stroke[0].y);
+          for (let i = 1; i < stroke.length; i++) ctx.lineTo(stroke[i].x, stroke[i].y);
+          ctx.stroke();
+        }
+      }
+    }
 
-// Placeholder printer
-function sendToPrinter(content) {
-  console.log("Send to printer:", content);
-}
+    undoBtn.addEventListener("click", () => {
+      if (pixelMode && pixelActions.length > 0) pixelActions.pop();
+      else if (!pixelMode && penStrokes.length > 0) penStrokes.pop();
+      redrawCanvas();
+    });
 
-// DRAW → TEXT
-sendDrawBtn.addEventListener("click", () => {
-  const imageData = canvas.toDataURL("image/png");
-  sendToPrinter(imageData);
-  penStrokes = [];
-  pixelActions = [];
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+    function sendToPrinter(content) {
+      console.log("Send to printer:", content);
+    }
 
-  drawPage.style.display = "none";
-  textPage.style.display = "flex";
-  textInput.value = "";
-  textInput.focus();
-});
+    // DRAW → TEXT
+    sendDrawBtn.addEventListener("click", () => {
+      sendToPrinter(canvas.toDataURL("image/png"));
+      penStrokes = [];
+      pixelActions = [];
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-// TEXT → DRAW
-sendTextBtn.addEventListener("click", () => {
-  const inputText = textInput.value || "something";
-  sendToPrinter(inputText);
-  drawTitle.textContent = `Draw: ${inputText}`;
-  textPage.style.display = "none";
-  drawPage.style.display = "flex";
-});
+      drawPage.style.display = "none";
+      textPage.style.display = "flex";
+      textInput.value = "";
+      textInput.focus();
+    });
 
-// Warning before leaving
-window.addEventListener('beforeunload', (e) => {
-  e.preventDefault();
-  e.returnValue = 'Warning: Reloading will lose the current transmission chain!';
-});
-</script>
+    // TEXT → DRAW
+    sendTextBtn.addEventListener("click", () => {
+      const inputText = textInput.value || "something";
+      sendToPrinter(inputText);
+      drawTitle.textContent = `Draw: ${inputText}`;
+      textPage.style.display = "none";
+      drawPage.style.display = "flex";
+    });
 
+    window.addEventListener('beforeunload', (e) => {
+      e.preventDefault();
+      e.returnValue = 'Warning: Reloading will lose the current transmission chain!';
+    });
+  </script>
 </body>
 </html>
