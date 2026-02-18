@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Illustrative Telephone Chain</title>
+<style>
+  body {
+    margin: 0;
+    background: black;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 40px 0;
+    font-family: Arial;
+  }
+
+  /* Container to keep content centered and stacked */
+  .page-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 850px;
+    width: 100%;
+    padding: 0 10px;
+    box-sizing: border-box;
+  }
+
+  /* Header + Buttons container: flex row with space between */
+  .header-row {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  h2 {
+    color: white;
+    margin: 0;
+    font-weight: normal;
+    text-align: center;
+    flex-grow: 1;
+  }
+
+  canvas {
+    border: 2px solid white;
+    background: white;
+    cursor: crosshair;
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Undo container positioned above canvas, left aligned */
+  #undoBtn {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    color: white;
+    font-size: 16px;
+    gap: 6px;
+    margin-bottom: 8px;
+    align-self: flex-start;
+  }
+  #undoBtn:hover {
+    text-decoration: underline;
+  }
+
+  /* Undo arrow icon as SVG (same size as text) */
+  #undoIcon {
+    width: 20px;
+    height: 20px;
+    fill: white;
+  }
+
+  /* ===== Toggle Styling ===== */
+  .mode-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    margin: 20px 0;
+  }
+
+  .mode-text {
+    font-weight: bold;
+    color: white;
+    transition: 0.3s;
+    opacity: 0.5;
+  }
+
+  .mode-text.active {
+    opacity: 1;
+  }
+
+  #toggle_checkbox {
+    display: none;
+  }
+
+  label {
+    position: relative;
+    width: 80px;
+    height: 40px;
+    background: white;
+    border-radius: 40px;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+
+  label:after {
+    content: "";
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 32px;
+    height: 32px;
+    background: black;
+    border-radius: 50%;
+    transition: 0.3s;
+  }
+
+  #toggle_checkbox:checked + label:after {
+    left: 44px;
+  }
+
+  /* ===== Buttons ===== */
+  .send-button {
+    background-color: white;
+    color: black;
+    border: none;
+    padding: 6px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 8px;
+    max-width: 140px;
+    width: 100%;
+  }
+
+  .send-button:hover {
+    background-color: #ddd;
+  }
+
+  /* ===== Text Input Page ===== */
+  #textPage {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+
+  #textPage input[type="text"] {
+    background: black;
+    border: none;
+    outline: none;
+    color: white;
+    font-size: 24px;
+    width: 400px;
+    text-align: center;
+    margin-top: 10px;
+  }
+</style>
+</head>
+<body>
+
+  <!-- DRAWING PAGE -->
+  <div id="drawPage">
+    <div class="page-content">
+      <div class="header-row">
+        <h2 id="drawTitle">Draw something hehe</h2>
+        <button id="sendDraw" class="send-button">Send to Print</button>
+      </div>
+
+      <div id="undoBtn" title="Undo last action" tabindex="0" role="button" aria-label="Undo last action">
+        <svg id="undoIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M12 5V2L7 7l5 5V7c3.86 0 7 3.14 7 7 0 1.66-.67 3.16-1.76 4.24l1.42 1.42C20.2 18.13 21 15.66 21 13c0-4.97-4.03-9-9-9z"/>
+        </svg>
+        Undo
+      </div>
+
+      <div class="mode-toggle">
+        <span class="mode-text left active">Pixel</span>
+        <input type="checkbox" id="toggle_checkbox">
+        <label for="toggle_checkbox"></label>
+        <span class="mode-text right">Pen</span>
+      </div>
+
+      <canvas id="canvas" width="800" height="800"></canvas>
+    </div>
+  </div>
+
+  <!-- TEXT PAGE -->
+  <div id="textPage">
+    <div class="page-content">
+      <div class="header-row">
+        <h2>What is that?</h2>
+        <button id="sendText" class="send-button">Send to Print</button>
+      </div>
+      <input type="text" id="textInput" placeholder="Type here..." autofocus>
+    </div>
+  </div>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const toggleBtn = document.getElementById("toggle_checkbox");
+const leftText = document.querySelector(".mode-text.left");
+const rightText = document.querySelector(".mode-text.right");
+const drawPage = document.getElementById("drawPage");
+const textPage = document.getElementById("textPage");
+const drawTitle = document.getElementById("drawTitle");
+const sendDrawBtn = document.getElementById("sendDraw");
+const sendTextBtn = document.getElementById("sendText");
+const textInput = document.getElementById("textInput");
+const undoBtn = document.getElementById("undoBtn");
+
+let drawing = false;
+let pixelMode = true;
+let pixelGridSize = 15;
+let canvasSize = 800;
+
+// History arrays to store drawing actions for undo
+// penStrokes = array of arrays of points [{x,y}, ...]
+// pixelActions = array of pixel cells [{x, y, cellSize}]
+let penStrokes = [];
+let pixelActions = [];
+
+// Current stroke points (for pen mode)
+let currentStroke = [];
+
+// Pen settings
+ctx.lineWidth = 50;
+ctx.lineCap = "round";
+ctx.lineJoin = "round";
+
+// Toggle highlighting
+toggleBtn.addEventListener("change", () => {
+  pixelMode = !toggleBtn.checked;
+  if (toggleBtn.checked) {
+    leftText.classList.remove("active");
+    rightText.classList.add("active");
+  } else {
+    leftText.classList.add("active");
+    rightText.classList.remove("active");
+  }
+});
+
+// Mouse events
+canvas.addEventListener("mousedown", (e) => {
+  drawing = true;
+  const rect = canvas.getBoundingClientRect();
+  if (!pixelMode) {
+    currentStroke = [];
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    currentStroke.push({x, y});
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  } else {
+    drawPixel(e.clientX - rect.left, e.clientY - rect.top);
+  }
+});
+
+canvas.addEventListener("mouseup", () => {
+  if (!drawing) return;
+  drawing = false;
+  if (!pixelMode && currentStroke.length > 0) {
+    penStrokes.push(currentStroke);
+    currentStroke = [];
+  }
+});
+
+canvas.addEventListener("mouseleave", () => {
+  if (!drawing) return;
+  drawing = false;
+  if (!pixelMode && currentStroke.length > 0) {
+    penStrokes.push(currentStroke);
+    currentStroke = [];
+  }
+});
+
+canvas.addEventListener("mousemove", (e) => {
+  if (!drawing) return;
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  if (pixelMode) {
+    drawPixel(x, y);
+  } else {
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    currentStroke.push({x, y});
+  }
+});
+
+function drawPixel(x, y) {
+  const cellSize = canvasSize / pixelGridSize;
+  const pixelX = Math.floor(x / cellSize);
+  const pixelY = Math.floor(y / cellSize);
+
+  // Check if pixel already exists in pixelActions (avoid duplicates)
+  if (!pixelActions.some(p => p.x === pixelX && p.y === pixelY)) {
+    pixelActions.push({x: pixelX, y: pixelY, cellSize});
+  }
+
+  ctx.fillRect(
+    pixelX * cellSize,
+    pixelY * cellSize,
+    cellSize,
+    cellSize
+  );
+}
+
+// Redraw the canvas from history (undo feature)
+function redrawCanvas() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Draw pixels
+  for (const p of pixelActions) {
+    ctx.fillRect(
+      p.x * p.cellSize,
+      p.y * p.cellSize,
+      p.cellSize,
+      p.cellSize
+    );
+  }
+
+  // Draw pen strokes
+  ctx.lineWidth = 50;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.strokeStyle = "black"; // always black lines
+
+  for (const stroke of penStrokes) {
+    ctx.beginPath();
+    if (stroke.length > 0) {
+      ctx.moveTo(stroke[0].x, stroke[0].y);
+      for (let i = 1; i < stroke.length; i++) {
+        ctx.lineTo(stroke[i].x, stroke[i].y);
+      }
+      ctx.stroke();
+    }
+  }
+}
+
+// Undo logic
+undoBtn.addEventListener("click", () => {
+  if (!pixelMode && penStrokes.length > 0) {
+    penStrokes.pop();
+  } else if (pixelMode && pixelActions.length > 0) {
+    pixelActions.pop();
+  } else {
+    // nothing to undo
+    return;
+  }
+  redrawCanvas();
+});
+
+// Keyboard accessibility for undo (Enter or Space triggers undo)
+undoBtn.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" || e.key === " ") {
+    undoBtn.click();
+  }
+});
+
+// Placeholder function for your printer
+function sendToPrinter(content) {
+  console.log("Send to printer:", content);
+}
+
+// DRAW → TEXT
+sendDrawBtn.addEventListener("click", () => {
+  const imageData = canvas.toDataURL("image/png");
+  sendToPrinter(imageData);
+
+  // Clear history and canvas for next round
+  penStrokes = [];
+  pixelActions = [];
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  drawPage.style.display = "none";
+  textPage.style.display = "flex";
+  textInput.value = "";
+  textInput.focus();
+});
+
+// TEXT → DRAW
+sendTextBtn.addEventListener("click", () => {
+  const inputText = textInput.value || "something";
+  sendToPrinter(inputText);
+
+  drawTitle.textContent = `Draw: ${inputText}`;
+
+  textPage.style.display = "none";
+  drawPage.style.display = "flex";
+});
+
+// Warning before leaving/reloading the page
+window.addEventListener('beforeunload', (e) => {
+  e.preventDefault();
+  e.returnValue = 'Warning: Reloading will lose the current transmission chain!';
+});
+</script>
+
+</body>
+</html>
