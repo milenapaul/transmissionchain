@@ -67,7 +67,7 @@
     text-decoration: underline;
   }
 
-  /* Undo arrow icon as SVG (same size as text) */
+  /* Undo arrow icon as SVG */
   #undoIcon {
     width: 20px;
     height: 20px;
@@ -141,25 +141,103 @@
     background-color: #ddd;
   }
 
-  /* ===== Text Input Page ===== */
-  #textPage {
-    display: none;
+  /* ===== TEXT PAGE CUSTOM LAYOUT ===== */
+  .text-layout {
+    display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 100%;
+    gap: 140px; /* breathing room */
+    min-height: 90vh;
   }
 
-  #textPage input[type="text"] {
+  .text-title {
+    color: white;
+    font-weight: normal;
+    font-size: 28px;
+    letter-spacing: 1px;
+    text-align: center;
+  }
+
+  /* Large immersive typing area */
+  #textInput {
     background: black;
     border: none;
     outline: none;
     color: white;
-    font-size: 24px;
-    width: 400px;
+    font-size: 48px;
+    width: 100%;
     text-align: center;
-    margin-top: 10px;
+    padding: 20px 10px;
   }
+
+  /* Subtle placeholder tone */
+  #textInput::placeholder {
+    color: rgba(255,255,255,0.4);
+  }
+
+  .text-submit {
+    font-size: 16px;
+    padding: 10px 28px;
+  }
+
+  /* Input + button row for same line */
+.input-row {
+  display: flex;
+  align-items: center;   /* vertically center */
+  gap: 12px;
+  width: 80vw;
+  max-width: 1000px;
+}
+
+.input-row input {
+  flex-grow: 1;          /* takes all remaining space */
+  min-width: 150px;      /* prevent it from shrinking too much */
+}
+
+
+.input-row button {
+  flex-shrink: 0;        /* keeps button its natural size */
+  white-space: nowrap;    /* keeps text on one line */
+  padding: 10px 20px;    /* adjust as needed */
+}
+
+  /* TEXT PAGE container */
+  #textPage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;          /* center horizontally */
+  justify-content: center;      /* center vertically */
+  gap: 40px;                    /* space between question and input */
+  padding-top: 40px;            /* nudge question slightly down from top */
+  width: 100%;
+  max-width: 850px;
+  box-sizing: border-box;
+}
+
+  .input-container {
+  display: flex;
+  flex-direction: column;    /* stack input and button vertically */
+  align-items: center;       /* center input horizontally */
+  width: 80vw;
+  max-width: 1000px;
+  gap: 12px;                 /* space between input and button */
+}
+
+.input-container input {
+  width: 100%;               /* full width of container */
+  max-width: 600px;          /* optional max width for input */
+  text-align: center;        /* text inside input is centered */
+  font-size: 48px;
+  padding: 20px 10px;
+}
+
+.input-container button {
+  align-self: flex-end;      /* button aligns right under input */
+  white-space: nowrap;       /* text stays on one line */
+  padding: 10px 28px;
+}
+
 </style>
 </head>
 <body>
@@ -191,15 +269,17 @@
   </div>
 
   <!-- TEXT PAGE -->
-  <div id="textPage">
-    <div class="page-content">
-      <div class="header-row">
-        <h2>What is that?</h2>
-        <button id="sendText" class="send-button">Send to Print</button>
-      </div>
+<div id="textPage">
+  <div class="page-content text-layout">
+    <h2 class="text-title">What is that?</h2>
+
+    <div class="input-container">
       <input type="text" id="textInput" placeholder="Type here..." autofocus>
+      <button id="sendText" class="send-button text-submit">Send to Print</button>
     </div>
+
   </div>
+</div>
 
 <script>
 const canvas = document.getElementById("canvas");
@@ -220,13 +300,9 @@ let pixelMode = true;
 let pixelGridSize = 15;
 let canvasSize = 800;
 
-// History arrays to store drawing actions for undo
-// penStrokes = array of arrays of points [{x,y}, ...]
-// pixelActions = array of pixel cells [{x, y, cellSize}]
+// History arrays
 let penStrokes = [];
 let pixelActions = [];
-
-// Current stroke points (for pen mode)
 let currentStroke = [];
 
 // Pen settings
@@ -299,73 +375,42 @@ function drawPixel(x, y) {
   const cellSize = canvasSize / pixelGridSize;
   const pixelX = Math.floor(x / cellSize);
   const pixelY = Math.floor(y / cellSize);
-
-  // Check if pixel already exists in pixelActions (avoid duplicates)
   if (!pixelActions.some(p => p.x === pixelX && p.y === pixelY)) {
     pixelActions.push({x: pixelX, y: pixelY, cellSize});
   }
-
-  ctx.fillRect(
-    pixelX * cellSize,
-    pixelY * cellSize,
-    cellSize,
-    cellSize
-  );
+  ctx.fillRect(pixelX * cellSize, pixelY * cellSize, cellSize, cellSize);
 }
 
-// Redraw the canvas from history (undo feature)
 function redrawCanvas() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // Draw pixels
   for (const p of pixelActions) {
-    ctx.fillRect(
-      p.x * p.cellSize,
-      p.y * p.cellSize,
-      p.cellSize,
-      p.cellSize
-    );
+    ctx.fillRect(p.x * p.cellSize, p.y * p.cellSize, p.cellSize, p.cellSize);
   }
-
-  // Draw pen strokes
   ctx.lineWidth = 50;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
-  ctx.strokeStyle = "black"; // always black lines
-
+  ctx.strokeStyle = "black";
   for (const stroke of penStrokes) {
     ctx.beginPath();
     if (stroke.length > 0) {
       ctx.moveTo(stroke[0].x, stroke[0].y);
-      for (let i = 1; i < stroke.length; i++) {
-        ctx.lineTo(stroke[i].x, stroke[i].y);
-      }
+      for (let i = 1; i < stroke.length; i++) ctx.lineTo(stroke[i].x, stroke[i].y);
       ctx.stroke();
     }
   }
 }
 
-// Undo logic
+// Undo
 undoBtn.addEventListener("click", () => {
-  if (!pixelMode && penStrokes.length > 0) {
-    penStrokes.pop();
-  } else if (pixelMode && pixelActions.length > 0) {
-    pixelActions.pop();
+  if (pixelMode) {
+    if (pixelActions.length > 0) pixelActions.pop();
   } else {
-    // nothing to undo
-    return;
+    if (penStrokes.length > 0) penStrokes.pop();
   }
   redrawCanvas();
 });
 
-// Keyboard accessibility for undo (Enter or Space triggers undo)
-undoBtn.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" || e.key === " ") {
-    undoBtn.click();
-  }
-});
-
-// Placeholder function for your printer
+// Placeholder printer
 function sendToPrinter(content) {
   console.log("Send to printer:", content);
 }
@@ -374,8 +419,6 @@ function sendToPrinter(content) {
 sendDrawBtn.addEventListener("click", () => {
   const imageData = canvas.toDataURL("image/png");
   sendToPrinter(imageData);
-
-  // Clear history and canvas for next round
   penStrokes = [];
   pixelActions = [];
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -390,14 +433,12 @@ sendDrawBtn.addEventListener("click", () => {
 sendTextBtn.addEventListener("click", () => {
   const inputText = textInput.value || "something";
   sendToPrinter(inputText);
-
   drawTitle.textContent = `Draw: ${inputText}`;
-
   textPage.style.display = "none";
   drawPage.style.display = "flex";
 });
 
-// Warning before leaving/reloading the page
+// Warning before leaving
 window.addEventListener('beforeunload', (e) => {
   e.preventDefault();
   e.returnValue = 'Warning: Reloading will lose the current transmission chain!';
