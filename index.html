@@ -29,7 +29,7 @@
     .header-row {
       width: 100%;
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-start;
       align-items: center;
       margin-bottom: 10px;
     }
@@ -38,8 +38,12 @@
       color: white;
       margin: 0;
       font-weight: normal;
-      text-align: center;
-      flex-grow: 1;
+      /* allow text wrap */
+      white-space: normal;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      max-width: 600px;
+      flex: 1;
     }
 
     canvas {
@@ -60,7 +64,8 @@
       font-size: 16px;
       gap: 6px;
       margin-bottom: 8px;
-      align-self: flex-start;
+      flex: none;
+      margin-right: auto;
     }
     #undoBtn:hover { text-decoration: underline; }
 
@@ -68,6 +73,7 @@
       width: 20px;
       height: 20px;
       fill: white;
+      vertical-align: middle;
     }
 
     /* Mode toggle */
@@ -77,6 +83,8 @@
       justify-content: center;
       gap: 20px;
       margin: 20px 0;
+      margin-left: auto;
+      flex: none;
     }
     .mode-text {
       font-weight: bold;
@@ -119,6 +127,8 @@
       border-radius: 8px;
       max-width: 140px;
       width: 100%;
+      height: 36px;
+      align-self: center;
     }
     .send-button:hover { background-color: #ddd; }
 
@@ -202,32 +212,36 @@
 </head>
 <body>
 
-  <!-- DRAWING PAGE -->
-  <div id="drawPage">
-    <div class="page-content">
-      <div class="header-row">
-        <h2 id="drawTitle">Draw something hehe</h2>
-        <button id="sendDraw" class="send-button">Send to Print</button>
-      </div>
+ <!-- DRAWING PAGE -->
+<div id="drawPage" style="display:none;">
+  <div class="page-content">
+    <div class="header-row" style="align-items: center;">
+      <h2 id="drawTitle"></h2>
+      <div style="flex: 1;"></div>
+    </div>
 
-      <div id="undoBtn" title="Undo last action">
+    <div style="display: flex; align-items: center; margin-top: 10px; margin-bottom: 20px; width: 100%;">
+      <div id="undoBtn" title="Undo last action" style="margin-right: auto;">
         <svg id="undoIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
           <path d="M12 5V2L7 7l5 5V7c3.86 0 7 3.14 7 7 0 1.66-.67 3.16-1.76 4.24l1.42 1.42C20.2 18.13 21 15.66 21 13c0-4.97-4.03-9-9-9z"/>
         </svg>
         Undo
       </div>
 
-      <div class="mode-toggle">
+      <div class="mode-toggle" style="margin: 0 20px;">
         <span class="mode-text left active">Pixel</span>
         <input type="checkbox" id="toggle_checkbox">
         <label for="toggle_checkbox"></label>
         <span class="mode-text right">Pen</span>
       </div>
 
-      <canvas id="canvas" width="800" height="800"></canvas>
-      <button id="reloadBtn" class="send-button" style="margin-top:20px;">Reload Page</button>
+      <button id="sendDraw" class="send-button" style="margin-left: auto;">Send to Print</button>
     </div>
+
+    <canvas id="canvas" width="800" height="800"></canvas>
+    <button id="reloadBtn" class="send-button" style="margin-top:20px;">Reload Page</button>
   </div>
+</div>
 
   <!-- TEXT PAGE -->
   <div id="textPage">
@@ -237,6 +251,16 @@
         <input type="text" id="textInput" placeholder="Without saying its name..." autofocus>
         <button id="sendText" class="send-button">Send to Print</button>
       </div>
+    </div>
+  </div>
+
+  <!-- PROMPT PAGE -->
+  <div id="promptPage">
+    <div class="page-content">
+      <h2 class="text-title" id="promptText" style="white-space: normal; word-wrap: break-word; overflow-wrap: break-word; max-width: 600px; text-align: center; margin-bottom: 40px;">
+        <!-- prompt text inserted here -->
+      </h2>
+      <button id="startDrawingBtn" class="send-button" style="width: auto; max-width: 200px;">Start Drawing</button>
     </div>
   </div>
 
@@ -257,11 +281,14 @@
     const rightText = document.querySelector(".mode-text.right");
     const drawPage = document.getElementById("drawPage");
     const textPage = document.getElementById("textPage");
+    const promptPage = document.getElementById("promptPage");
     const drawTitle = document.getElementById("drawTitle");
     const sendDrawBtn = document.getElementById("sendDraw");
     const sendTextBtn = document.getElementById("sendText");
     const textInput = document.getElementById("textInput");
     const undoBtn = document.getElementById("undoBtn");
+    const startDrawingBtn = document.getElementById("startDrawingBtn");
+    const promptText = document.getElementById("promptText");
 
     const reloadBtn = document.getElementById("reloadBtn");
     const leaveModal = document.getElementById("leaveModal");
@@ -277,6 +304,25 @@
     let pixelActions = [];
     let currentStroke = [];
 
+    // Your list of prompts for the prompt page
+    const prompts = [
+      "Draw a castle made of candy",
+      "Look around the room, what's the weirdest thing you see?",
+      "Draw a futuristic flying car",
+      "What would a cat look like if it were a robot?",
+      "Imagine a new type of tree and draw it"
+    ];
+
+    function pickRandomPrompt() {
+      const idx = Math.floor(Math.random() * prompts.length);
+      return prompts[idx];
+    }
+
+    // Initialize the first prompt page
+    let currentPrompt = pickRandomPrompt();
+    promptText.textContent = currentPrompt;
+
+    // Canvas drawing setup
     ctx.lineWidth = 50;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
@@ -351,23 +397,37 @@
 
     function sendToPrinter(content) { console.log("Send to printer:", content); }
 
-    sendDrawBtn.addEventListener("click", () => {
-      sendToPrinter(canvas.toDataURL("image/png"));
+    // Start drawing from prompt page
+    startDrawingBtn.addEventListener("click", () => {
+      drawTitle.textContent = currentPrompt;  // Show prompt only, no "Draw:"
+      drawPage.style.display = "flex";
+      promptPage.style.display = "none";
+      textPage.style.display = "none";
       penStrokes = [];
       pixelActions = [];
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+    });
+
+    // Send drawing and go to guess page
+    sendDrawBtn.addEventListener("click", () => {
+      sendToPrinter(canvas.toDataURL("image/png"));
       drawPage.style.display = "none";
       textPage.style.display = "flex";
       textInput.value = "";
       textInput.focus();
     });
 
+    // Send guess and go back to draw page with new prompt
     sendTextBtn.addEventListener("click", () => {
       const inputText = textInput.value || "something";
       sendToPrinter(inputText);
-      drawTitle.textContent = `Draw: ${inputText}`;
+      currentPrompt = inputText;
+      drawTitle.textContent = currentPrompt; // Show the new prompt on draw page
       textPage.style.display = "none";
       drawPage.style.display = "flex";
+      penStrokes = [];
+      pixelActions = [];
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
     });
 
     // CUSTOM MODAL EVENTS
@@ -380,6 +440,13 @@
       e.preventDefault();
       e.returnValue = 'Warning: Reloading will lose the current transmission chain!';
     });
+
+    // Show prompt page first on load
+    window.onload = () => {
+      promptPage.style.display = "flex";
+      drawPage.style.display = "none";
+      textPage.style.display = "none";
+    };
   </script>
 </body>
 </html>
