@@ -296,7 +296,7 @@
   <div class="page-content">
     <h2 class="text-title">What is that?</h2>
     <div class="input-container">
-      <input type="text" id="textInput" placeholder="No names, just describe..." autofocus>
+      <input type="text" id="textInput" placeholder="Describe what you see..." autofocus>
       <button id="sendText" class="send-button">Send to Print</button>
     </div>
   </div>
@@ -307,6 +307,14 @@
   <div class="page-content">
     <h2 class="text-title" id="promptText"></h2>
     <button id="startDrawingBtn" class="send-button" style="width:auto; max-width:200px;">Start Drawing</button>
+  </div>
+</div>
+
+<!-- SWITCH PAGE -->
+<div id="switchPage" style="display:none;">
+  <div class="page-content">
+    <h2 class="text-title">Switch with another person to continue</h2>
+    <button id="continueBtn" class="send-button" style="width:auto; max-width:200px;">Continue</button>
   </div>
 </div>
 
@@ -329,6 +337,7 @@
   const drawPage = document.getElementById("drawPage");
   const textPage = document.getElementById("textPage");
   const promptPage = document.getElementById("promptPage");
+  const switchPage = document.getElementById("switchPage");
   const drawTitle = document.getElementById("drawTitle");
   const sendDrawBtn = document.getElementById("sendDraw");
   const sendTextBtn = document.getElementById("sendText");
@@ -344,6 +353,8 @@
   const infoIcon = document.getElementById("infoIcon");
   const infoOverlay = document.getElementById("infoOverlay");
   const closeInfoOverlay = document.getElementById("closeInfoOverlay");
+
+  const continueBtn = document.getElementById("continueBtn");
 
   let drawing = false;
   let pixelMode = true;
@@ -465,26 +476,44 @@
     penStrokes=[]; pixelActions=[]; ctx.clearRect(0,0,canvas.width,canvas.height);
   });
 
-  sendDrawBtn.addEventListener("click",()=>{
+  // --- SWITCH PAGE LOGIC ---
+  function showSwitchPage(nextPage) {
+    drawPage.style.display="none";
+    textPage.style.display="none";
+    promptPage.style.display="none";
+    switchPage.style.display="flex";
+
+    continueBtn.onclick = () => {
+      switchPage.style.display="none";
+      nextPage.style.display="flex";
+
+      if (nextPage === drawPage) {
+        penStrokes = [];
+        pixelActions = [];
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawTitle.textContent = currentPrompt;
+      }
+
+      if (nextPage === textPage) {
+        textInput.value = "";
+        textInput.focus();
+      }
+    };
+  }
+
+  // DRAW -> SWITCH -> GUESS
+  sendDrawBtn.addEventListener("click", () => {
     sendToPrinter(canvas.toDataURL("image/png"));
-    drawPage.style.display="none"; textPage.style.display="flex";
-    textInput.value=""; textInput.focus();
+    showSwitchPage(textPage);
   });
 
-sendTextBtn.addEventListener("click", () => {
-  const input = textInput.value || "something";
-  sendToPrinter(input);
-
-  // Use the typed guess as the next prompt
-  currentPrompt = input; 
-  drawTitle.textContent = currentPrompt;
-
-  textPage.style.display = "none";
-  drawPage.style.display = "flex";
-  penStrokes = [];
-  pixelActions = [];
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-});
+  // GUESS -> SWITCH -> DRAW
+  sendTextBtn.addEventListener("click", () => {
+    const input = textInput.value || "something";
+    sendToPrinter(input);
+    currentPrompt = input;
+    showSwitchPage(drawPage);
+  });
 
   reloadBtn.addEventListener("click",()=>{ leaveModal.style.display="flex"; });
   cancelLeave.addEventListener("click",()=>{ leaveModal.style.display="none"; });
@@ -496,9 +525,7 @@ sendTextBtn.addEventListener("click", () => {
   infoIcon.addEventListener("click",()=>infoOverlay.style.display="flex");
   closeInfoOverlay.addEventListener("click",()=>infoOverlay.style.display="none");
 
-  window.onload = ()=>{
-    promptPage.style.display="flex"; drawPage.style.display="none"; textPage.style.display="none";
-  };
+  window.onload = ()=>{ promptPage.style.display="flex"; drawPage.style.display="none"; textPage.style.display="none"; };
 </script>
 
 </body>
