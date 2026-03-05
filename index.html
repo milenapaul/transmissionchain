@@ -14,7 +14,6 @@
       justify-content: center;
     }
 
-    /* Container to keep content centered and stacked */
     .page-content {
       display: flex;
       flex-direction: column;
@@ -25,7 +24,6 @@
       box-sizing: border-box;
     }
 
-    /* Header + Buttons container: flex row with space between */
     .header-row {
       width: 100%;
       display: flex;
@@ -38,7 +36,6 @@
       color: white;
       margin: 0;
       font-weight: normal;
-      /* allow text wrap */
       white-space: normal;
       word-wrap: break-word;
       overflow-wrap: break-word;
@@ -54,7 +51,6 @@
       height: auto;
     }
 
-    /* Undo container */
     #undoBtn {
       display: flex;
       align-items: center;
@@ -76,7 +72,6 @@
       vertical-align: middle;
     }
 
-    /* Mode toggle */
     .mode-toggle {
       display: flex;
       align-items: center;
@@ -116,7 +111,6 @@
     }
     #toggle_checkbox:checked + label:after { left: 44px; }
 
-    /* Buttons */
     .send-button {
       background-color: white;
       color: black;
@@ -132,7 +126,6 @@
     }
     .send-button:hover { background-color: #ddd; }
 
-    /* ===== TEXT PAGE ===== */
     #textPage {
       display: none; 
       flex-direction: column;
@@ -177,7 +170,6 @@
       font-size: 16px;
     }
 
-    /* ===== CUSTOM MODAL ===== */
     #leaveModal {
       position: fixed;
       top: 0;
@@ -208,18 +200,77 @@
     }
     #leaveModal .confirm { background: white; color: black; }
     #leaveModal .cancel { background: #555; color: white; }
+
+    /* INFO BUTTON OVERLAY */
+    #infoIcon {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      color: white;
+      cursor: pointer;
+      z-index: 2000;
+      font-weight: bold;
+      font-size: 20px;
+    }
+
+    #infoOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.95);
+      color: white;
+      display: none;
+      z-index: 2001;
+      padding: 60px 40px 40px 40px;
+      box-sizing: border-box;
+      overflow-y: auto;
+      text-align: left;
+    }
+    #infoOverlay .overlay-content {
+      display: block;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    #infoOverlay h2 {
+      margin-top: 0;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    #infoOverlay p {
+      display: block;
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+    #closeInfoOverlay {
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
 
- <!-- DRAWING PAGE -->
+<!-- INFO BUTTON -->
+<div id="infoIcon">i</div>
+
+<!-- INFO OVERLAY -->
+<div id="infoOverlay">
+  <div class="overlay-content">
+    <h2>Instructions</h2>
+    <p>Transmission chain is a term that describes when information is sequentially passed between several people, each person in the chain conveying the information they were given to the next person.</p>
+    <p>People serve as a filter, modifying the information. The way that the information transforms through the transmission chain tells us about the participants and the information itself.</p>
+    <p>After you contribute your part in the chain, switch with another person. You can go back and forth with a friend or just leave the page unattended for the next passerby.</p>
+    <button id="closeInfoOverlay" class="send-button">Close</button>
+  </div>
+</div>
+
+<!-- DRAW PAGE -->
 <div id="drawPage" style="display:none;">
   <div class="page-content">
-    <div class="header-row" style="align-items: center;">
+    <div class="header-row">
       <h2 id="drawTitle"></h2>
-      <div style="flex: 1;"></div>
+      <div style="flex:1"></div>
     </div>
-
     <div style="display: flex; align-items: center; margin-top: 10px; margin-bottom: 20px; width: 100%;">
       <div id="undoBtn" title="Undo last action" style="margin-right: auto;">
         <svg id="undoIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -227,226 +278,228 @@
         </svg>
         Undo
       </div>
-
       <div class="mode-toggle" style="margin: 0 20px;">
         <span class="mode-text left active">Pixel</span>
         <input type="checkbox" id="toggle_checkbox">
         <label for="toggle_checkbox"></label>
         <span class="mode-text right">Pen</span>
       </div>
-
-      <button id="sendDraw" class="send-button" style="margin-left: auto;">Send to Print</button>
+      <button id="sendDraw" class="send-button" style="margin-left:auto;">Send to Print</button>
     </div>
-
     <canvas id="canvas" width="800" height="800"></canvas>
     <button id="reloadBtn" class="send-button" style="margin-top:20px;">Reload Page</button>
   </div>
 </div>
 
-  <!-- TEXT PAGE -->
-  <div id="textPage">
-    <div class="page-content">
-      <h2 class="text-title">What is that?</h2>
-      <div class="input-container">
-        <input type="text" id="textInput" placeholder="Without saying its name..." autofocus>
-        <button id="sendText" class="send-button">Send to Print</button>
-      </div>
+<!-- TEXT PAGE -->
+<div id="textPage">
+  <div class="page-content">
+    <h2 class="text-title">What is that?</h2>
+    <div class="input-container">
+      <input type="text" id="textInput" placeholder="No names, just describe..." autofocus>
+      <button id="sendText" class="send-button">Send to Print</button>
     </div>
   </div>
+</div>
 
-  <!-- PROMPT PAGE -->
-  <div id="promptPage">
-    <div class="page-content">
-      <h2 class="text-title" id="promptText" style="white-space: normal; word-wrap: break-word; overflow-wrap: break-word; max-width: 600px; text-align: center; margin-bottom: 40px;">
-        <!-- prompt text inserted here -->
-      </h2>
-      <button id="startDrawingBtn" class="send-button" style="width: auto; max-width: 200px;">Start Drawing</button>
-    </div>
+<!-- PROMPT PAGE -->
+<div id="promptPage">
+  <div class="page-content">
+    <h2 class="text-title" id="promptText"></h2>
+    <button id="startDrawingBtn" class="send-button" style="width:auto; max-width:200px;">Start Drawing</button>
   </div>
+</div>
 
-  <!-- CUSTOM LEAVE MODAL -->
-  <div id="leaveModal">
-    <div class="modal-content">
-      <p>WAITTTTT reloading will cause us to break the current transmission chain!!! Are you sure?</p>
-      <button class="confirm" id="confirmLeave">Yes, reload</button>
-      <button class="cancel" id="cancelLeave">Cancel</button>
-    </div>
+<!-- CUSTOM LEAVE MODAL -->
+<div id="leaveModal">
+  <div class="modal-content">
+    <p>WAITTTTT reloading will cause us to break the current transmission chain!!! Are you sure?</p>
+    <button class="confirm" id="confirmLeave">Yes, reload</button>
+    <button class="cancel" id="cancelLeave">Cancel</button>
   </div>
+</div>
 
-  <script>
-    const canvas = document.getElementById("canvas");
-    const ctx = canvas.getContext("2d");
-    const toggleBtn = document.getElementById("toggle_checkbox");
-    const leftText = document.querySelector(".mode-text.left");
-    const rightText = document.querySelector(".mode-text.right");
-    const drawPage = document.getElementById("drawPage");
-    const textPage = document.getElementById("textPage");
-    const promptPage = document.getElementById("promptPage");
-    const drawTitle = document.getElementById("drawTitle");
-    const sendDrawBtn = document.getElementById("sendDraw");
-    const sendTextBtn = document.getElementById("sendText");
-    const textInput = document.getElementById("textInput");
-    const undoBtn = document.getElementById("undoBtn");
-    const startDrawingBtn = document.getElementById("startDrawingBtn");
-    const promptText = document.getElementById("promptText");
+<script>
+  // --- CANVAS SETUP ---
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+  const toggleBtn = document.getElementById("toggle_checkbox");
+  const leftText = document.querySelector(".mode-text.left");
+  const rightText = document.querySelector(".mode-text.right");
+  const drawPage = document.getElementById("drawPage");
+  const textPage = document.getElementById("textPage");
+  const promptPage = document.getElementById("promptPage");
+  const drawTitle = document.getElementById("drawTitle");
+  const sendDrawBtn = document.getElementById("sendDraw");
+  const sendTextBtn = document.getElementById("sendText");
+  const textInput = document.getElementById("textInput");
+  const undoBtn = document.getElementById("undoBtn");
+  const startDrawingBtn = document.getElementById("startDrawingBtn");
+  const promptText = document.getElementById("promptText");
+  const reloadBtn = document.getElementById("reloadBtn");
+  const leaveModal = document.getElementById("leaveModal");
+  const confirmLeave = document.getElementById("confirmLeave");
+  const cancelLeave = document.getElementById("cancelLeave");
 
-    const reloadBtn = document.getElementById("reloadBtn");
-    const leaveModal = document.getElementById("leaveModal");
-    const confirmLeave = document.getElementById("confirmLeave");
-    const cancelLeave = document.getElementById("cancelLeave");
+  const infoIcon = document.getElementById("infoIcon");
+  const infoOverlay = document.getElementById("infoOverlay");
+  const closeInfoOverlay = document.getElementById("closeInfoOverlay");
 
-    let drawing = false;
-    let pixelMode = true;
-    let pixelGridSize = 15;
-    let canvasSize = 800;
+  let drawing = false;
+  let pixelMode = true;
+  let pixelGridSize = 15;
+  let canvasSize = 800;
 
-    let penStrokes = [];
-    let pixelActions = [];
-    let currentStroke = [];
+  let penStrokes = [];
+  let pixelActions = [];
+  let currentStroke = [];
 
-    // Your list of prompts for the prompt page
-    const prompts = [
-      "Draw a castle made of candy",
-      "Look around the room, what's the weirdest thing you see?",
-      "Draw a futuristic flying car",
-      "What would a cat look like if it were a robot?",
-      "Imagine a new type of tree and draw it"
-    ];
+  // --- PROMPTS ---
+  const prompts = [
+    "Look around the room, what's the first piece of text you see on a t-shirt.", 
+    "Where were you last night?", 
+    "What did you eat today?", 
+    "What was the last thing that made you laugh?", 
+    "What is the shape of envy?", 
+    "What is the shape of shame?", 
+    "What is the shape of joy?", 
+    "Draw your favorite song.", 
+    "Invent a new shape.", 
+    "Draw what you hear around you in the next 10 seconds.", 
+    "What's in your right pocket right now?", 
+    "What's in your left pocket right now?", 
+    "What do you want?", 
+    "What do you need?", 
+    "What do you miss?", 
+    "What is the maximum amount of ants you'd be willing to eat?", 
+    "How many rocks can you carry in your palm?", 
+    "Draw the last animal you saw.", 
+    "Draw an obsession you had as a kid.", 
+    "Draw the smallest thing in the room.", 
+    "What's the opposite of a circle?", 
+    "Draw the biggest thing in the room.", 
+    "What's the last thing you touched before coming here?",
+    "Draw the last object you've misplaced?",
+  ];
 
-    function pickRandomPrompt() {
-      const idx = Math.floor(Math.random() * prompts.length);
-      return prompts[idx];
+  function pickRandomPrompt() {
+    return prompts[Math.floor(Math.random()*prompts.length)];
+  }
+
+  let currentPrompt = pickRandomPrompt();
+  promptText.textContent = currentPrompt;
+
+  ctx.lineWidth = 50;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+
+  toggleBtn.addEventListener("change", () => {
+    pixelMode = !toggleBtn.checked;
+    if (toggleBtn.checked) {
+      leftText.classList.remove("active");
+      rightText.classList.add("active");
+    } else {
+      leftText.classList.add("active");
+      rightText.classList.remove("active");
     }
+  });
 
-    // Initialize the first prompt page
-    let currentPrompt = pickRandomPrompt();
-    promptText.textContent = currentPrompt;
-
-    // Canvas drawing setup
-    ctx.lineWidth = 50;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-
-    toggleBtn.addEventListener("change", () => {
-      pixelMode = !toggleBtn.checked;
-      if (toggleBtn.checked) {
-        leftText.classList.remove("active");
-        rightText.classList.add("active");
-      } else {
-        leftText.classList.add("active");
-        rightText.classList.remove("active");
-      }
-    });
-
-    // Drawing events
-    canvas.addEventListener("mousedown", (e) => {
-      drawing = true;
-      const rect = canvas.getBoundingClientRect();
-      if (!pixelMode) {
-        currentStroke = [];
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        currentStroke.push({x, y});
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-      } else {
-        drawPixel(e.clientX - rect.left, e.clientY - rect.top);
-      }
-    });
-    canvas.addEventListener("mouseup", () => { drawing = false; if (!pixelMode && currentStroke.length) penStrokes.push(currentStroke); });
-    canvas.addEventListener("mouseleave", () => { drawing = false; if (!pixelMode && currentStroke.length) penStrokes.push(currentStroke); });
-    canvas.addEventListener("mousemove", (e) => {
-      if (!drawing) return;
-      const rect = canvas.getBoundingClientRect();
+  canvas.addEventListener("mousedown", (e) => {
+    drawing = true;
+    const rect = canvas.getBoundingClientRect();
+    if (!pixelMode) {
+      currentStroke = [];
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
-      if (pixelMode) drawPixel(x, y);
-      else { ctx.lineTo(x, y); ctx.stroke(); currentStroke.push({x, y}); }
-    });
-
-    function drawPixel(x, y) {
-      const cellSize = canvasSize / pixelGridSize;
-      const pixelX = Math.floor(x / cellSize);
-      const pixelY = Math.floor(y / cellSize);
-      if (!pixelActions.some(p => p.x === pixelX && p.y === pixelY)) pixelActions.push({x: pixelX, y: pixelY, cellSize});
-      ctx.fillRect(pixelX * cellSize, pixelY * cellSize, cellSize, cellSize);
+      currentStroke.push({x, y});
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+    } else {
+      drawPixel(e.clientX - rect.left, e.clientY - rect.top);
     }
+  });
+  canvas.addEventListener("mouseup", () => { drawing=false; if(!pixelMode && currentStroke.length) penStrokes.push(currentStroke); });
+  canvas.addEventListener("mouseleave", () => { drawing=false; if(!pixelMode && currentStroke.length) penStrokes.push(currentStroke); });
+  canvas.addEventListener("mousemove", (e) => {
+    if(!drawing) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    if(pixelMode) drawPixel(x,y);
+    else { ctx.lineTo(x,y); ctx.stroke(); currentStroke.push({x,y}); }
+  });
 
-    function redrawCanvas() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      for (const p of pixelActions) ctx.fillRect(p.x * p.cellSize, p.y * p.cellSize, p.cellSize, p.cellSize);
-      ctx.lineWidth = 50;
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-      ctx.strokeStyle = "black";
-      for (const stroke of penStrokes) {
-        ctx.beginPath();
-        if (stroke.length) {
-          ctx.moveTo(stroke[0].x, stroke[0].y);
-          for (let i = 1; i < stroke.length; i++) ctx.lineTo(stroke[i].x, stroke[i].y);
-          ctx.stroke();
-        }
+  function drawPixel(x,y){
+    const cellSize = canvasSize/pixelGridSize;
+    const pixelX = Math.floor(x/cellSize);
+    const pixelY = Math.floor(y/cellSize);
+    if(!pixelActions.some(p=>p.x===pixelX && p.y===pixelY)) pixelActions.push({x:pixelX,y:pixelY,cellSize});
+    ctx.fillRect(pixelX*cellSize,pixelY*cellSize,cellSize,cellSize);
+  }
+
+  function redrawCanvas(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    for(const p of pixelActions) ctx.fillRect(p.x*p.cellSize,p.y*p.cellSize,p.cellSize,p.cellSize);
+    ctx.lineWidth=50; ctx.lineCap="round"; ctx.lineJoin="round"; ctx.strokeStyle="black";
+    for(const stroke of penStrokes){
+      ctx.beginPath();
+      if(stroke.length){
+        ctx.moveTo(stroke[0].x,stroke[0].y);
+        for(let i=1;i<stroke.length;i++) ctx.lineTo(stroke[i].x,stroke[i].y);
+        ctx.stroke();
       }
     }
+  }
 
-    undoBtn.addEventListener("click", () => {
-      if (pixelMode && pixelActions.length) pixelActions.pop();
-      else if (!pixelMode && penStrokes.length) penStrokes.pop();
-      redrawCanvas();
-    });
+  undoBtn.addEventListener("click",()=>{
+    if(pixelMode && pixelActions.length) pixelActions.pop();
+    else if(!pixelMode && penStrokes.length) penStrokes.pop();
+    redrawCanvas();
+  });
 
-    function sendToPrinter(content) { console.log("Send to printer:", content); }
+  function sendToPrinter(content){ console.log("Send to printer:",content); }
 
-    // Start drawing from prompt page
-    startDrawingBtn.addEventListener("click", () => {
-      drawTitle.textContent = currentPrompt;  // Show prompt only, no "Draw:"
-      drawPage.style.display = "flex";
-      promptPage.style.display = "none";
-      textPage.style.display = "none";
-      penStrokes = [];
-      pixelActions = [];
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-    });
+  startDrawingBtn.addEventListener("click",()=>{
+    drawTitle.textContent=currentPrompt;
+    drawPage.style.display="flex"; promptPage.style.display="none"; textPage.style.display="none";
+    penStrokes=[]; pixelActions=[]; ctx.clearRect(0,0,canvas.width,canvas.height);
+  });
 
-    // Send drawing and go to guess page
-    sendDrawBtn.addEventListener("click", () => {
-      sendToPrinter(canvas.toDataURL("image/png"));
-      drawPage.style.display = "none";
-      textPage.style.display = "flex";
-      textInput.value = "";
-      textInput.focus();
-    });
+  sendDrawBtn.addEventListener("click",()=>{
+    sendToPrinter(canvas.toDataURL("image/png"));
+    drawPage.style.display="none"; textPage.style.display="flex";
+    textInput.value=""; textInput.focus();
+  });
 
-    // Send guess and go back to draw page with new prompt
-    sendTextBtn.addEventListener("click", () => {
-      const inputText = textInput.value || "something";
-      sendToPrinter(inputText);
-      currentPrompt = inputText;
-      drawTitle.textContent = currentPrompt; // Show the new prompt on draw page
-      textPage.style.display = "none";
-      drawPage.style.display = "flex";
-      penStrokes = [];
-      pixelActions = [];
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-    });
+sendTextBtn.addEventListener("click", () => {
+  const input = textInput.value || "something";
+  sendToPrinter(input);
 
-    // CUSTOM MODAL EVENTS
-    reloadBtn.addEventListener("click", () => { leaveModal.style.display = "flex"; });
-    cancelLeave.addEventListener("click", () => { leaveModal.style.display = "none"; });
-    confirmLeave.addEventListener("click", () => { leaveModal.style.display = "none"; location.reload(); });
+  // Use the typed guess as the next prompt
+  currentPrompt = input; 
+  drawTitle.textContent = currentPrompt;
 
-    // Standard beforeunload warning (Chrome native)
-    window.addEventListener('beforeunload', (e) => {
-      e.preventDefault();
-      e.returnValue = 'Warning: Reloading will lose the current transmission chain!';
-    });
+  textPage.style.display = "none";
+  drawPage.style.display = "flex";
+  penStrokes = [];
+  pixelActions = [];
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+});
 
-    // Show prompt page first on load
-    window.onload = () => {
-      promptPage.style.display = "flex";
-      drawPage.style.display = "none";
-      textPage.style.display = "none";
-    };
-  </script>
+  reloadBtn.addEventListener("click",()=>{ leaveModal.style.display="flex"; });
+  cancelLeave.addEventListener("click",()=>{ leaveModal.style.display="none"; });
+  confirmLeave.addEventListener("click",()=>{ leaveModal.style.display="none"; location.reload(); });
+
+  window.addEventListener('beforeunload',(e)=>{ e.preventDefault(); e.returnValue='Warning: Reloading will lose the current transmission chain!'; });
+
+  // INFO OVERLAY
+  infoIcon.addEventListener("click",()=>infoOverlay.style.display="flex");
+  closeInfoOverlay.addEventListener("click",()=>infoOverlay.style.display="none");
+
+  window.onload = ()=>{
+    promptPage.style.display="flex"; drawPage.style.display="none"; textPage.style.display="none";
+  };
+</script>
+
 </body>
 </html>
