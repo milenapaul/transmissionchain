@@ -72,45 +72,6 @@
       vertical-align: middle;
     }
 
-    .mode-toggle {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 20px;
-      margin: 20px 0;
-      margin-left: auto;
-      flex: none;
-    }
-    .mode-text {
-      font-weight: bold;
-      color: white;
-      transition: 0.3s;
-      opacity: 0.5;
-    }
-    .mode-text.active { opacity: 1; }
-    #toggle_checkbox { display: none; }
-    label {
-      position: relative;
-      width: 80px;
-      height: 40px;
-      background: white;
-      border-radius: 40px;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-    label:after {
-      content: "";
-      position: absolute;
-      top: 4px;
-      left: 4px;
-      width: 32px;
-      height: 32px;
-      background: black;
-      border-radius: 50%;
-      transition: 0.3s;
-    }
-    #toggle_checkbox:checked + label:after { left: 44px; }
-
     .send-button {
       background-color: white;
       color: black;
@@ -250,10 +211,8 @@
 </head>
 <body>
 
-<!-- INFO BUTTON -->
 <div id="infoIcon">i</div>
 
-<!-- INFO OVERLAY -->
 <div id="infoOverlay">
   <div class="overlay-content">
     <h2>Instructions</h2>
@@ -265,7 +224,6 @@
   </div>
 </div>
 
-<!-- DRAW PAGE -->
 <div id="drawPage" style="display:none;">
   <div class="page-content">
     <div class="header-row">
@@ -279,12 +237,6 @@
         </svg>
         Undo
       </div>
-      <div class="mode-toggle" style="margin: 0 20px;">
-        <span class="mode-text left active">Pixel</span>
-        <input type="checkbox" id="toggle_checkbox">
-        <label for="toggle_checkbox"></label>
-        <span class="mode-text right">Pen</span>
-      </div>
       <button id="sendDraw" class="send-button" style="margin-left:auto;">Send to Print</button>
     </div>
     <canvas id="canvas" width="800" height="800"></canvas>
@@ -292,7 +244,6 @@
   </div>
 </div>
 
-<!-- TEXT PAGE -->
 <div id="textPage">
   <div class="page-content">
     <h2 class="text-title">What is that?</h2>
@@ -303,7 +254,6 @@
   </div>
 </div>
 
-<!-- PROMPT PAGE -->
 <div id="promptPage">
   <div class="page-content">
     <h2 class="text-title" id="promptText"></h2>
@@ -311,7 +261,6 @@
   </div>
 </div>
 
-<!-- SWITCH PAGE -->
 <div id="switchPage" style="display:none;">
   <div class="page-content">
     <h2 class="text-title">Switch with another person to continue</h2>
@@ -319,7 +268,6 @@
   </div>
 </div>
 
-<!-- CUSTOM LEAVE MODAL -->
 <div id="leaveModal">
   <div class="modal-content">
     <p>WAITTTTT reloading will cause us to break the current transmission chain!!! Are you sure?</p>
@@ -332,9 +280,6 @@
   // --- CANVAS SETUP ---
   const canvas = document.getElementById("canvas");
   const ctx = canvas.getContext("2d");
-  const toggleBtn = document.getElementById("toggle_checkbox");
-  const leftText = document.querySelector(".mode-text.left");
-  const rightText = document.querySelector(".mode-text.right");
   const drawPage = document.getElementById("drawPage");
   const textPage = document.getElementById("textPage");
   const promptPage = document.getElementById("promptPage");
@@ -358,12 +303,7 @@
   const continueBtn = document.getElementById("continueBtn");
 
   let drawing = false;
-  let pixelMode = true;
-  let pixelGridSize = 15;
-  let canvasSize = 800;
-
   let penStrokes = [];
-  let pixelActions = [];
   let currentStroke = [];
 
   // --- PROMPTS ---
@@ -403,55 +343,49 @@
   ctx.lineWidth = 50;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
-
-  toggleBtn.addEventListener("change", () => {
-    pixelMode = !toggleBtn.checked;
-    if (toggleBtn.checked) {
-      leftText.classList.remove("active");
-      rightText.classList.add("active");
-    } else {
-      leftText.classList.add("active");
-      rightText.classList.remove("active");
-    }
-  });
+  ctx.strokeStyle = "black";
 
   canvas.addEventListener("mousedown", (e) => {
     drawing = true;
     const rect = canvas.getBoundingClientRect();
-    if (!pixelMode) {
-      currentStroke = [];
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      currentStroke.push({x, y});
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-    } else {
-      drawPixel(e.clientX - rect.left, e.clientY - rect.top);
-    }
+    currentStroke = [];
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    currentStroke.push({x, y});
+    ctx.beginPath();
+    ctx.moveTo(x, y);
   });
-  canvas.addEventListener("mouseup", () => { drawing=false; if(!pixelMode && currentStroke.length) penStrokes.push(currentStroke); });
-  canvas.addEventListener("mouseleave", () => { drawing=false; if(!pixelMode && currentStroke.length) penStrokes.push(currentStroke); });
+
+  canvas.addEventListener("mouseup", () => { 
+    if(drawing && currentStroke.length) {
+      penStrokes.push(currentStroke);
+    }
+    drawing = false; 
+  });
+
+  canvas.addEventListener("mouseleave", () => { 
+    if(drawing && currentStroke.length) {
+      penStrokes.push(currentStroke);
+    }
+    drawing = false; 
+  });
+
   canvas.addEventListener("mousemove", (e) => {
     if(!drawing) return;
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    if(pixelMode) drawPixel(x,y);
-    else { ctx.lineTo(x,y); ctx.stroke(); currentStroke.push({x,y}); }
+    ctx.lineTo(x,y); 
+    ctx.stroke(); 
+    currentStroke.push({x,y});
   });
-
-  function drawPixel(x,y){
-    const cellSize = canvasSize/pixelGridSize;
-    const pixelX = Math.floor(x/cellSize);
-    const pixelY = Math.floor(y/cellSize);
-    if(!pixelActions.some(p=>p.x===pixelX && p.y===pixelY)) pixelActions.push({x:pixelX,y:pixelY,cellSize});
-    ctx.fillRect(pixelX*cellSize,pixelY*cellSize,cellSize,cellSize);
-  }
 
   function redrawCanvas(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
-    for(const p of pixelActions) ctx.fillRect(p.x*p.cellSize,p.y*p.cellSize,p.cellSize,p.cellSize);
-    ctx.lineWidth=50; ctx.lineCap="round"; ctx.lineJoin="round"; ctx.strokeStyle="black";
+    ctx.lineWidth=50; 
+    ctx.lineCap="round"; 
+    ctx.lineJoin="round"; 
+    ctx.strokeStyle="black";
     for(const stroke of penStrokes){
       ctx.beginPath();
       if(stroke.length){
@@ -463,8 +397,7 @@
   }
 
   undoBtn.addEventListener("click",()=>{
-    if(pixelMode && pixelActions.length) pixelActions.pop();
-    else if(!pixelMode && penStrokes.length) penStrokes.pop();
+    if(penStrokes.length) penStrokes.pop();
     redrawCanvas();
   });
 
@@ -473,7 +406,7 @@
   startDrawingBtn.addEventListener("click",()=>{
     drawTitle.textContent=currentPrompt;
     drawPage.style.display="flex"; promptPage.style.display="none"; textPage.style.display="none";
-    penStrokes=[]; pixelActions=[]; ctx.clearRect(0,0,canvas.width,canvas.height);
+    penStrokes=[]; ctx.clearRect(0,0,canvas.width,canvas.height);
   });
 
   // --- SWITCH PAGE LOGIC ---
@@ -489,7 +422,6 @@
 
       if (nextPage === drawPage) {
         penStrokes = [];
-        pixelActions = [];
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         drawTitle.textContent = currentPrompt;
       }
@@ -501,13 +433,11 @@
     };
   }
 
-  // DRAW -> SWITCH -> GUESS
   sendDrawBtn.addEventListener("click", () => {
     sendToPrinter(canvas.toDataURL("image/png"));
     showSwitchPage(textPage);
   });
 
-  // GUESS -> SWITCH -> DRAW
   sendTextBtn.addEventListener("click", () => {
     const input = textInput.value || "something";
     sendToPrinter(input);
@@ -521,7 +451,6 @@
 
   window.addEventListener('beforeunload',(e)=>{ e.preventDefault(); e.returnValue='Warning: Reloading will lose the current transmission chain!'; });
 
-  // INFO OVERLAY
   infoIcon.addEventListener("click",()=>infoOverlay.style.display="flex");
   closeInfoOverlay.addEventListener("click",()=>infoOverlay.style.display="none");
 
