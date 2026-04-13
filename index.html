@@ -2,6 +2,7 @@
 <html>
 <head>
   <title>Data Passing through Bodies</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     body {
       margin: 0;
@@ -211,6 +212,25 @@
 </head>
 <body>
 
+  <div id="printBuffer" style="position: absolute; left: -9999px; width: 576px; background: white; color: black;">
+  <img id="bufferImg" style="width: 100%; display: block; margin: 0; padding: 0;">
+  <div id="bufferTextContainer" style="
+    border: 4px solid black; 
+    height: 180px; 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: flex-end; 
+    padding: 15px; 
+    box-sizing: border-box;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 24px;
+    font-weight: bold;
+    word-break: break-word;
+    line-height: 1.1;">
+    <span id="bufferText"></span>
+  </div>
+</div>
+
 <div id="infoIcon">i</div>
 
 <div id="infoOverlay">
@@ -220,6 +240,9 @@
     <p>Data passing through bodies.</p>
     <p>People serve as a filter, modifying the information. The way that the information transforms through the transmission chain tells us about the participants and the information itself.</p>
     <p>After you contribute your part in the chain, switch with another person. You can go back and forth with a friend or just leave the page unattended for the next passerby.</p>
+    <button onclick="connectToPrinter()" class="send-button" style="background: #000000; color: white; margin-bottom: 10px;">
+  Connect POS-80 Printer
+</button>
     <button id="closeInfoOverlay" class="send-button">Close</button>
   </div>
 </div>
@@ -278,6 +301,7 @@
 
 <script>
   // --- CANVAS SETUP ---
+  let printerPort;
   const canvas = document.getElementById("canvas");
   const ctx = canvas.getContext("2d");
   const drawPage = document.getElementById("drawPage");
@@ -433,18 +457,70 @@
     };
   }
 
-  sendDrawBtn.addEventListener("click", () => {
-    sendToPrinter(canvas.toDataURL("image/png"));
-    showSwitchPage(textPage);
-  });
+// --- NEW PRINTING LOGIC ---
 
-  sendTextBtn.addEventListener("click", () => {
-    const input = textInput.value || "something";
-    sendToPrinter(input);
-    currentPrompt = input;
-    showSwitchPage(drawPage);
-  });
+// 1. Function to connect to your USB POS-80 (Call this from a button)
+async function connectToPrinter() {
+  try {
+    printerPort = await navigator.serial.requestPort();
+    await printerPort.open({ baudRate: 9600 });
+    alert("Printer Connected!");
+  } catch (err) {
+    console.error("Printer connection failed:", err);
+  }
+}
 
+// 2. The logic that builds the layout and "snaps" the photo
+async function captureAndPrint(mode, data) {
+  const buffer = document.getElementById('printBuffer');
+  const bImg = document.getElementById('bufferImg');
+  const bTextContainer = document.getElementById('bufferTextContainer');
+  const bText = document.getElementById('bufferText');
+
+  if (mode === 'draw') {
+    bImg.src = data;
+    bImg.style.display = "block";
+    bTextContainer.style.display = "none";
+    await new Promise(r => bImg.onload = r);
+  } else {
+    bImg.style.display = "none";
+    bTextContainer.style.display = "flex";
+    bText.textContent = data;
+  }
+
+  // Snap the hidden buffer into a 576px canvas
+  const printCanvas = await html2canvas(buffer, { width: 576 });
+  
+  // Send to your physical printer function
+  processAndSendToHardware(printCanvas); 
+}
+
+// 3. Updated Button Listeners
+sendDrawBtn.onclick = () => {
+  const data = canvas.toDataURL("image/png");
+  captureAndPrint('draw', data); 
+  showSwitchPage(textPage);
+};
+
+sendTextBtn.onclick = () => {
+  const input = textInput.value || "...";
+  captureAndPrint('text', input);
+  currentPrompt = input;
+  showSwitchPage(drawPage);
+};
+
+// 4. Send raw data to USB (Simplified concept)
+async function processAndSendToHardware(canvas) {
+  if (!printerPort) {
+    console.warn("Printer not connected. Connect via the Info menu.");
+    return;
+  }
+  const writer = printerPort.writable.getWriter();
+  // Here you would send the ESC/POS commands
+  // For now, it will log that it's ready to go!
+  console.log("Sending data to thermal head...");
+  writer.releaseLock();
+}
   reloadBtn.addEventListener("click",()=>{ leaveModal.style.display="flex"; });
   cancelLeave.addEventListener("click",()=>{ leaveModal.style.display="none"; });
   confirmLeave.addEventListener("click",()=>{ leaveModal.style.display="none"; location.reload(); });
