@@ -5,12 +5,20 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     
-      
+     @font-face {
+    font-family: 'arial_rounded_mt_stdbold';
+    src: url('arial_rounded_mt_std_bold-webfont.woff2') format('woff2'),
+         url('arial_rounded_mt_std_bold-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+
+} 
 
     body {
       margin: 0;
       background: black;
-      font-family: Arial;
+      font-family: 'arial_rounded_mt_stdbold';
+      font-kerning: auto;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -26,6 +34,8 @@
       width: 100%;
       padding: 0 10px;
       box-sizing: border-box;
+      font-family: 'arial_rounded_mt_stdbold';
+      font-kerning: auto;
     }
 
     .header-row {
@@ -34,12 +44,16 @@
       justify-content: flex-start;
       align-items: center;
       margin-bottom: 10px;
+      font-family: 'arial_rounded_mt_stdbold';
+      font-kerning: auto;
     }
 
     h2 {
       color: white;
       margin: 0;
       font-weight: normal;
+      font-family: 'arial_rounded_mt_stdbold';
+      font-kerning: auto;
       white-space: normal;
       word-wrap: break-word;
       overflow-wrap: break-word;
@@ -66,6 +80,8 @@
       margin-bottom: 8px;
       flex: none;
       margin-right: auto;
+      font-family: 'arial_rounded_mt_stdbold';
+      font-kerning: auto;
     }
     #undoBtn:hover { text-decoration: underline; }
 
@@ -88,6 +104,8 @@
       width: 100%;
       height: 36px;
       align-self: center;
+      font-family: 'arial_rounded_mt_stdbold';
+      font-kerning: auto;
     }
     .send-button:hover { background-color: #ddd; }
 
@@ -100,6 +118,8 @@
       max-width: 850px;
       padding-top: 80px;
       box-sizing: border-box;
+      font-family: 'arial_rounded_mt_stdbold';
+      font-kerning: auto;
     }
     .text-title {
       color: white;
@@ -108,6 +128,8 @@
       letter-spacing: 1px;
       text-align: center;
       margin-bottom: 40px;
+      font-family: 'arial_rounded_mt_stdbold';
+      font-kerning: auto;
     }
     .input-container {
       display: flex;
@@ -126,6 +148,9 @@
       border: none;
       outline: none;
       color: white;
+      font-family: 'arial_rounded_mt_stdbold';
+      font-kerning: auto;
+
     }
     .input-container input::placeholder { color: rgba(255,255,255,0.4); }
     .input-container button {
@@ -273,7 +298,7 @@
   <div class="page-content">
     <h2 class="text-title">What is that?</h2>
     <div class="input-container">
-      <input type="text" id="textInput" placeholder="Describe the image that was last printed..." autofocus>
+      <input type="text" id="textInput" placeholder="What do you see in the drawing?" autofocus>
       <button id="sendText" class="send-button">Send to Print</button>
     </div>
   </div>
@@ -288,7 +313,7 @@
 
 <div id="switchPage" style="display:none;">
   <div class="page-content">
-    <h2 class="text-title">Switch with another person to continue</h2>
+    <h2 class="text-title">Switch with another person to continue...</h2>
     <button id="continueBtn" class="send-button" style="width:auto; max-width:200px;">Continue</button>
   </div>
 </div>
@@ -518,7 +543,7 @@ sendTextBtn.onclick = () => {
   showSwitchPage(drawPage);
 };
 
-// 4. Send raw data to USB (Simplified concept) THANK YOU GEMINI
+// 4. Send raw data to USB (Simplified concept) THANK YOU GEMINI AHHH
 async function processAndSendToHardware(canvas) {
   if (!printerPort) {
     console.warn("Printer not connected. Connect via the Info menu.");
