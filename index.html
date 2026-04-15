@@ -4,6 +4,9 @@
   <title>Data Passing through Bodies</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
+    
+      
+
     body {
       margin: 0;
       background: black;
@@ -80,7 +83,7 @@
       padding: 6px 16px;
       font-size: 14px;
       cursor: pointer;
-      border-radius: 8px;
+      border-radius: 0px;
       max-width: 140px;
       width: 100%;
       height: 36px;
@@ -128,6 +131,7 @@
     .input-container button {
       align-self: flex-end;
       white-space: nowrap;
+      border-radius: 0px;
       padding: 10px 28px;
       font-size: 16px;
     }
@@ -157,7 +161,7 @@
       padding: 8px 20px;
       font-size: 16px;
       cursor: pointer;
-      border-radius: 8px;
+      border-radius: 0px;
       border: none;
     }
     #leaveModal .confirm { background: white; color: black; }
@@ -240,8 +244,6 @@
     <p>Data passing through bodies.</p>
     <p>People serve as a filter, modifying the information. The way that the information transforms through the transmission chain tells us about the participants and the information itself.</p>
     <p>After you contribute your part in the chain, switch with another person. You can go back and forth with a friend or just leave the page unattended for the next passerby.</p>
-    <button onclick="connectToPrinter()" class="send-button" style="background: #000000; color: white; margin-bottom: 10px;">
-  Connect POS-80 Printer
 </button>
     <button id="closeInfoOverlay" class="send-button">Close</button>
   </div>
@@ -300,7 +302,7 @@
 </div>
 
 <script>
-  // --- CANVAS SETUP ---
+  // --- CANVAS SETUP THANK YOU GEMINI WOW KYS ---
   let printerPort;
   const canvas = document.getElementById("canvas");
   const ctx = canvas.getContext("2d");
@@ -331,15 +333,15 @@
   let currentStroke = [];
 
   // --- PROMPTS ---
-  const prompts = [
+  const prompts = [  
     "Where were you last night?", 
     "What did you eat today?", 
     "What was the last thing that made you laugh?", 
     "What is the shape of envy?", 
     "What is the shape of shame?", 
     "What is the shape of joy?", 
-    "Draw a new shape.", 
-    "What sounds are you hearing right now?, 
+    "Invent a new shape.",
+    "What sounds are you hearing right now?", 
     "What's in your right pocket right now?", 
     "What's in your left pocket right now?", 
     "What do you want?", 
@@ -349,7 +351,7 @@
     "What was the last object you've misplaced?",
     "What is your earliest memory?",
     "How many rocks can you carry in your palm?", 
-    "How many ants can you fit in your mouth?',
+    "How many ants can you fit in your mouth?",
     "What could you do?",
     "What was the last animal you saw.",
     "Draw the smallest thing in the room.",
@@ -362,7 +364,6 @@
     "What would you do with a $100?",
     "What would you do with a $1000?",
     "What would you do with a $100,000?",
-
   ];
 
   function pickRandomPrompt() {
@@ -465,7 +466,7 @@
     };
   }
 
-// --- NEW PRINTING LOGIC ---
+// --- NEW FUCKASS STUPID IDIOT PRINTING LOGIC THANK YOU GEMINI ---
 
 // 1. Function to connect to your USB POS-80 (Call this from a button)
 async function connectToPrinter() {
@@ -517,7 +518,7 @@ sendTextBtn.onclick = () => {
   showSwitchPage(drawPage);
 };
 
-// 4. Send raw data to USB (Simplified concept)
+// 4. Send raw data to USB (Simplified concept) THANK YOU GEMINI
 async function processAndSendToHardware(canvas) {
   if (!printerPort) {
     console.warn("Printer not connected. Connect via the Info menu.");
