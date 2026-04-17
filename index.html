@@ -737,8 +737,8 @@ async function printSinglePage(contentType, data, extraText = "") {
         yOffset += 10;
         
         // Then print 40mm of blank space (cushion for ripping)
-        // 40mm = approximately 8 lines at 5mm each
-        for (let i = 0; i < 8; i++) {
+        // 40mm = approximately 16 lines at 5mm each
+        for (let i = 0; i < 16; i++) {
             doc.text(" ", margin, yOffset);
             yOffset += 5;
         }
@@ -1044,6 +1044,7 @@ async function silentlySaveChain() {
         return;
     }
     stepCounter++;
+    console.log("Sending draw, stepCounter:", stepCounter, "chainEntries length:", chainEntries.length);
     const canvasData = canvas.toDataURL("image/png");
     const promptToPrint = (stepCounter === 1) ? currentPrompt : "";
     await printSinglePage('draw', canvasData, promptToPrint);
@@ -1062,6 +1063,7 @@ async function silentlySaveChain() {
         return;
     }
     stepCounter++;
+    console.log("Sending text, stepCounter:", stepCounter, "chainEntries length:", chainEntries.length);
     await printSinglePage('text', userText);
     
     // Save chain entry
@@ -1160,7 +1162,7 @@ window.addEventListener('beforeunload', (event) => {
     closeInfoOverlay.addEventListener("click", () => infoOverlay.style.display = "none");
 
     // Initial page load
-    window.onload = async () => {
+   window.onload = async () => {
     loadPromptIndex();
     
     // Check if this is a reload that should break the chain
@@ -1192,20 +1194,25 @@ window.addEventListener('beforeunload', (event) => {
             alert(`Chain broken by page reload at ${new Date().toLocaleTimeString()}\nPDF saved to Downloads folder.`);
         }
         
-        // Reset game state
+        // Reset game state after reload break
         chainBroken = true;
         gameStarted = false;
         stepCounter = 0;
         chainEntries = [];
     }
     
-    // Normal initialization
+    // Normal initialization (only for fresh page loads, not after break)
     currentPrompt = getNextPrompt();
-promptText.textContent = preventWidows(currentPrompt);
+    promptText.textContent = preventWidows(currentPrompt);
     promptPage.style.display = "flex";
-    stepCounter = 0;
-    chainBroken = false;
-    gameStarted = false;
+    
+    // Only reset these if this is a fresh load (not a reload break)
+    if (pendingBreak !== 'true') {
+        stepCounter = 0;
+        chainBroken = false;
+        gameStarted = false;
+        chainEntries = [];
+    }
     
     // Re-enter fullscreen if it was enabled before reload
     const wasFullscreen = localStorage.getItem('wasFullscreen');
