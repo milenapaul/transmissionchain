@@ -875,6 +875,7 @@ promptText.textContent = preventWidows(currentPrompt); // Use the function
     }
 
     // --- Silently save the entire chain as a PDF (no UI disruption) ---
+// --- Silently save the entire chain as a PDF (completely invisible - no dialog) ---
 async function silentlySaveChain() {
     if (chainEntries.length === 0) return;
     
@@ -947,9 +948,25 @@ async function silentlySaveChain() {
         yOffset += 8;
     }
     
-    // Save silently - no user interaction needed
+    // SILENT SAVE - no dialog, no popup, no user interaction
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-    doc.save(`chain-${timestamp}.pdf`);
+    const fileName = `chain-${timestamp}.pdf`;
+    
+    // Create a download link and trigger it programmatically
+    const pdfBlob = doc.output('blob');
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(pdfBlob);
+    link.href = url;
+    link.download = fileName;
+    
+    // Append to body, click, remove - all invisible to user
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    // No alert, no popup, no confirmation - completely silent
+    console.log(`Chain saved silently as ${fileName}`);
 }
 
     canvas.addEventListener("mousedown", (e) => {
@@ -1191,7 +1208,7 @@ window.addEventListener('beforeunload', (event) => {
             sessionStorage.removeItem('savedStepCounter');
             
             // Show alert to user
-            alert(`Chain broken by page reload at ${new Date().toLocaleTimeString()}\nPDF saved to Downloads folder.`);
+           // alert(`Chain broken by page reload at ${new Date().toLocaleTimeString()}\nPDF saved to Downloads folder.`);
         }
         
         // Reset game state after reload break
